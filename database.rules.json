@@ -1,0 +1,76 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('users/' + auth.uid + '/role').val() === 'admin')",
+        ".write": "auth != null && (auth.uid === $uid || root.child('users/' + auth.uid + '/role').val() === 'admin')",
+        "role": {
+          ".write": "root.child('users/' + auth.uid + '/role').val() === 'admin'"
+        }
+      }
+    },
+    "teams": {
+      ".read": "auth != null",
+      "$teamId": {
+        ".write": "auth != null && (!data.exists() || data.child('leaderUid').val() === auth.uid || root.child('users/' + auth.uid + '/role').val() === 'admin')",
+        "members": {
+          "$uid": {
+            ".write": "auth != null && ($uid === auth.uid || root.child('teams/' + $teamId + '/leaderUid').val() === auth.uid || root.child('users/' + auth.uid + '/role').val() === 'admin')"
+          }
+        },
+        "memberCount": {
+          ".write": "auth != null"
+        }
+      }
+    },
+    "teamCodes": {
+      ".read": "auth != null",
+      "$code": {
+        ".write": "auth != null && (!data.exists() || root.child('users/' + auth.uid + '/role').val() === 'admin')"
+      }
+    },
+    "announcements": {
+      ".read": "auth != null",
+      ".indexOn": ["createdAt"],
+      "$id": {
+        ".write": "root.child('users/' + auth.uid + '/role').val() === 'admin'"
+      }
+    },
+    "rounds": {
+      ".read": true,
+      "$id": {
+        ".write": "root.child('users/' + auth.uid + '/role').val() === 'admin'"
+      }
+    },
+    "submissions": {
+      "$roundId": {
+        ".read": "root.child('users/' + auth.uid + '/role').val() === 'admin'",
+        "$teamId": {
+          ".read": "auth != null && root.child('teams/' + $teamId + '/members/' + auth.uid).exists()",
+          ".write": "auth != null && root.child('teams/' + $teamId + '/members/' + auth.uid).exists() && root.child('rounds/' + $roundId + '/open').val() === true && root.child('rounds/' + $roundId + '/deadline').val() > now"
+        }
+      }
+    },
+    "helpSessions": {
+      ".read": "auth != null",
+      "$id": {
+        ".write": "root.child('users/' + auth.uid + '/role').val() === 'admin'"
+      }
+    },
+    "helpRequests": {
+      ".indexOn": ["uid"],
+      "$id": {
+        ".read": "auth != null && (data.child('uid').val() === auth.uid || root.child('users/' + auth.uid + '/role').val() === 'admin')",
+        ".write": "auth != null && (!data.exists() || data.child('uid').val() === auth.uid || root.child('users/' + auth.uid + '/role').val() === 'admin')"
+      }
+    },
+    "settings": {
+      ".read": true,
+      ".write": "root.child('users/' + auth.uid + '/role').val() === 'admin'"
+    },
+    "stats": {
+      ".read": true,
+      ".write": "auth != null"
+    }
+  }
+}

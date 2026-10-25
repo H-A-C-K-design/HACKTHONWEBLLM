@@ -1,0 +1,93 @@
+/* ═══════════════════════════════════════════════════════
+   HEXONA-LLM — Design Tokens
+   ═══════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Orbitron:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ── Backgrounds ── */
+  --bg-0: #0B0B0D;
+  --bg-1: #121214;
+  --bg-2: #1A1A1D;
+  --bg-3: #242428;
+
+  /* ── Greys ── */
+  --grey-500: #6B6B73;
+  --grey-400: #8A8A93;
+  --grey-300: #A8A8B0;
+
+  /* ── Gold ── */
+  --gold-300: #F3DFA2;
+  --gold-400: #E6C766;
+  --gold-500: #D4AF37;
+  --gold-600: #B8942A;
+  --gold-700: #8A6D1D;
+  --gold-gradient: linear-gradient(135deg, #F3DFA2 0%, #D4AF37 45%, #8A6D1D 100%);
+  --gold-gradient-text: linear-gradient(135deg, #F3DFA2 0%, #D4AF37 50%, #E6C766 100%);
+  --gold-gradient-btn: linear-gradient(135deg, #F3DFA2 0%, #D4AF37 45%, #B8942A 100%);
+
+  /* ── Text ── */
+  --text-primary: #FFFFFF;
+  --text-secondary: #D9D9DE;
+  --text-muted: #9A9AA3;
+
+  /* ── Glass ── */
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-hover: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(212, 175, 55, 0.25);
+  --glass-border-subtle: rgba(255, 255, 255, 0.08);
+  --glow-gold: 0 0 24px rgba(212, 175, 55, 0.35);
+  --glow-gold-sm: 0 0 12px rgba(212, 175, 55, 0.2);
+  --glow-gold-lg: 0 0 48px rgba(212, 175, 55, 0.3);
+
+  /* ── Semantic ── */
+  --success: #34D399;
+  --warning: #FBBF24;
+  --error: #F87171;
+  --info: #60A5FA;
+
+  /* ── Typography ── */
+  --font-display: 'Cinzel', serif;
+  --font-heading: 'Playfair Display', serif;
+  --font-accent: 'Orbitron', sans-serif;
+  --font-accent-alt: 'Rajdhani', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* ── Spacing ── */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 6rem;
+
+  /* ── Radius ── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ── Transitions ── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+
+  /* ── Sidebar ── */
+  --sidebar-expanded: 280px;
+  --sidebar-collapsed: 84px;
+
+  /* ── Z-index ── */
+  --z-background: -1;
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+  --z-tooltip: 500;
+}
