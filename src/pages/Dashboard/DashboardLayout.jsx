@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, Bell, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Menu, Bell, ExternalLink, ShieldCheck, Mail, RefreshCw, CheckCircle2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { useRealtime } from '../../hooks/useRealtime';
+import { sendVerificationEmail, getAuthErrorMessage } from '../../firebase/auth';
 import Sidebar from './Sidebar';
 import AnimatedBackground from '../../components/AnimatedBackground';
 import './Dashboard.css';
@@ -12,7 +14,49 @@ export default function DashboardLayout() {
   const [expanded, setExpanded] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const { profile, isAdmin } = useAuth();
+  const { user, profile, isAdmin, isEmailVerified, refreshUser } = useAuth();
+
+  const [resending, setResending] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => setCooldown((c) => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  const handleResendVerification = async () => {
+    if (!user || cooldown > 0) return;
+    setResending(true);
+    try {
+      await sendVerificationEmail(user);
+      toast.success(`Verification link sent to ${user.email}! Please check your inbox and spam folder.`);
+      setCooldown(60);
+    } catch (err) {
+      console.error('Failed to resend verification email:', err);
+      toast.error(getAuthErrorMessage(err));
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const handleCheckVerification = async () => {
+    setChecking(true);
+    try {
+      const updatedUser = await refreshUser();
+      if (updatedUser?.emailVerified) {
+        toast.success('Email successfully verified! Welcome aboard.');
+      } else {
+        toast.error('Not verified yet. Please click the link in your email first.');
+      }
+    } catch (err) {
+      console.error('Failed to refresh user:', err);
+      toast.error('Could not refresh status. Please try again.');
+    } finally {
+      setChecking(false);
+    }
+  };
 
   // Listen to announcements for topbar bell badge
   const { data: announcementsData } = useRealtime('announcements');
@@ -139,6 +183,46 @@ export default function DashboardLayout() {
 
         {/* Content with animated route transition */}
         <main className="dash-content">
+          {user && !isEmailVerified && (
+            <div className="email-verification-banner">
+              <div className="email-banner-info">
+                <div className="email-banner-icon-box">
+                  <Mail size={18} />
+                </div>
+                <div>
+                  <p className="email-banner-title">
+                    Verify your email address
+                  </p>
+                  <p className="email-banner-desc">
+                    A confirmation link was sent to <strong>{user.email}</strong>. Please click the link in your inbox.
+                  </p>
+                </div>
+              </div>
+              <div className="email-banner-actions">
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={resending || cooldown > 0}
+                  className="email-banner-btn secondary"
+                  title="Resend email link"
+                >
+                  <RefreshCw size={14} className={resending ? 'spin' : ''} />
+                  <span>{cooldown > 0 ? `Resend (${cooldown}s)` : resending ? 'Sending...' : 'Resend Email'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCheckVerification}
+                  disabled={checking}
+                  className="email-banner-btn primary"
+                  title="Check if verified"
+                >
+                  <CheckCircle2 size={14} />
+                  <span>{checking ? 'Checking...' : "I've Verified"}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

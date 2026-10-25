@@ -37,12 +37,24 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  const refreshUser = async () => {
+    if (auth.currentUser) {
+      await auth.currentUser.reload();
+      // Clone user object to trigger re-renders with fresh emailVerified flag
+      setUser({ ...auth.currentUser });
+      return auth.currentUser;
+    }
+    return null;
+  };
+
   const value = {
     user,
     profile,
     loading,
     isAdmin: profile?.role === 'admin',
     isAuthenticated: !!user,
+    isEmailVerified: !!user?.emailVerified,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

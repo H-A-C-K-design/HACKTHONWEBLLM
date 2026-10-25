@@ -34,11 +34,19 @@ export default function Login() {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      await loginUser(data.email, data.password);
-      toast.success('Welcome back to HEXONA-LLM!');
+      const loggedUser = await loginUser(data.email, data.password);
+      if (!loggedUser?.emailVerified) {
+        toast('Welcome back! Please verify your email via the link sent to your inbox.', {
+          icon: '✉️',
+          duration: 6000,
+        });
+      } else {
+        toast.success('Welcome back to HEXONA-LLM!');
+      }
       navigate('/dashboard');
     } catch (err) {
-      toast.error(getAuthErrorMessage(err.code || err.message));
+      console.error('Login Error:', err);
+      toast.error(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }

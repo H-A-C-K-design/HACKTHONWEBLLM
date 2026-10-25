@@ -30,10 +30,14 @@ export default function Register() {
     setLoading(true);
     try {
       await registerUser(data);
-      toast.success('Welcome to HEXONA-LLM!');
+      toast.success(
+        `Account created! A verification link was sent to ${data.email}. Please verify your email.`,
+        { duration: 7000 }
+      );
       navigate('/dashboard');
     } catch (err) {
-      toast.error(getAuthErrorMessage(err.code));
+      console.error('Registration Error:', err);
+      toast.error(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }

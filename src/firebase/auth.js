@@ -5,6 +5,7 @@ import {
   GoogleAuthProvider,
   signOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
   updateProfile,
 } from 'firebase/auth';
 import { ref, set, serverTimestamp, get } from 'firebase/database';
@@ -14,7 +15,7 @@ const googleProvider = new GoogleAuthProvider();
 
 /**
  * Register a new user with email/password.
- * Creates user profile in RTDB under users/{uid}.
+ * Sends email verification and creates user profile in RTDB.
  */
 export async function registerUser({ email, password, name, phone, college, year }) {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -22,20 +23,50 @@ export async function registerUser({ email, password, name, phone, college, year
 
   await updateProfile(user, { displayName: name });
 
-  // Write user profile to RTDB
-  await set(ref(db, `users/${user.uid}`), {
-    name,
-    email,
-    phone: phone || '',
-    college: college || '',
-    year: year || '',
-    role: 'participant',
-    teamId: null,
-    lastReadAnnouncements: 0,
-    createdAt: Date.now(),
-  });
+  // Send email verification link
+  try {
+    await sendEmailVerification(user);
+  } catch (verifyErr) {
+    console.warn('Failed to send verification email during registration:', verifyErr);
+  }
+
+  // Write user profile to RTDB safely
+  try {
+    await set(ref(db, `users/${user.uid}`), {
+      name,
+      email,
+      phone: phone || '',
+      college: college || '',
+      year: year || '',
+      role: 'participant',
+      teamId: null,
+      lastReadAnnouncements: 0,
+      createdAt: Date.now(),
+    });
+  } catch (dbErr) {
+    console.warn('Could not save user profile to RTDB:', dbErr);
+  }
 
   return user;
+}
+
+/**
+ * Resend email verification link.
+ */
+export async function sendVerificationEmail(currentUser = auth.currentUser) {
+  if (!currentUser) throw new Error('No user is currently signed in');
+  await sendEmailVerification(currentUser);
+}
+
+/**
+ * Reload current user from Firebase auth to refresh verification state.
+ */
+export async function reloadCurrentUser() {
+  if (auth.currentUser) {
+    await auth.currentUser.reload();
+    return auth.currentUser;
+  }
+  return null;
 }
 
 /**
