@@ -51,7 +51,8 @@ export default function Login() {
       toast.success('Welcome to HEXONA-LLM!');
       navigate('/dashboard');
     } catch (err) {
-      toast.error(getAuthErrorMessage(err.code || err.message));
+      console.error('Google Sign-In Error:', err);
+      toast.error(getAuthErrorMessage(err));
     } finally {
       setGoogleLoading(false);
     }

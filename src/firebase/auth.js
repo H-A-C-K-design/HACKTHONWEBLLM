@@ -54,20 +54,24 @@ export async function signInWithGoogle() {
   const result = await signInWithPopup(auth, googleProvider);
   const user = result.user;
 
-  // Check if profile exists
-  const snapshot = await get(ref(db, `users/${user.uid}`));
-  if (!snapshot.exists()) {
-    await set(ref(db, `users/${user.uid}`), {
-      name: user.displayName || '',
-      email: user.email || '',
-      phone: '',
-      college: '',
-      year: '',
-      role: 'participant',
-      teamId: null,
-      lastReadAnnouncements: 0,
-      createdAt: Date.now(),
-    });
+  // Safely check/create profile in RTDB
+  try {
+    const snapshot = await get(ref(db, `users/${user.uid}`));
+    if (!snapshot.exists()) {
+      await set(ref(db, `users/${user.uid}`), {
+        name: user.displayName || 'Participant',
+        email: user.email || '',
+        phone: '',
+        college: '',
+        year: '',
+        role: 'participant',
+        teamId: null,
+        lastReadAnnouncements: 0,
+        createdAt: Date.now(),
+      });
+    }
+  } catch (dbErr) {
+    console.warn('Realtime Database profile sync notice:', dbErr);
   }
 
   return user;
@@ -88,21 +92,38 @@ export async function resetPassword(email) {
 }
 
 /**
- * Map Firebase auth error codes to friendly messages.
+ * Map Firebase auth error codes to friendly, descriptive messages.
  */
-export function getAuthErrorMessage(errorCode) {
+export function getAuthErrorMessage(error) {
+  const code = typeof error === 'string' ? error : (error?.code || '');
+  const rawMessage = error?.message || (typeof error === 'string' ? error : '');
+
   const messages = {
     'auth/email-already-in-use': 'This email is already registered. Try logging in.',
     'auth/invalid-email': 'Invalid email address.',
-    'auth/operation-not-allowed': 'This sign-in method is not enabled.',
+    'auth/operation-not-allowed': 'Google Sign-In is disabled. Enable "Google" in Firebase Console > Authentication > Sign-in method.',
+    'auth/configuration-not-found': 'Google provider not configured in Firebase. Enable it in Firebase Console > Authentication > Sign-in method.',
+    'auth/unauthorized-domain': 'Domain not authorized. Add your current domain in Firebase Console > Authentication > Settings > Authorized domains.',
+    'auth/popup-blocked': 'Sign-in popup was blocked by your browser. Please allow popups for this site.',
+    'auth/popup-closed-by-user': 'Sign-in popup was closed before completing. Please try again.',
+    'auth/cancelled-popup-request': 'Popup sign-in was cancelled.',
     'auth/weak-password': 'Password must be at least 6 characters.',
     'auth/user-disabled': 'This account has been disabled.',
     'auth/user-not-found': 'No account found with this email.',
     'auth/wrong-password': 'Incorrect password. Please try again.',
     'auth/too-many-requests': 'Too many attempts. Please try again later.',
     'auth/invalid-credential': 'Invalid credentials. Please check your email and password.',
-    'auth/popup-closed-by-user': 'Sign-in popup was closed. Please try again.',
-    'auth/network-request-failed': 'Network error. Check your connection.',
+    'auth/network-request-failed': 'Network error. Please check your internet connection.',
+    'auth/internal-error': 'Firebase configuration error. Check your Firebase settings.',
   };
-  return messages[errorCode] || 'An unexpected error occurred. Please try again.';
+
+  if (code && messages[code]) {
+    return messages[code];
+  }
+
+  if (rawMessage) {
+    return rawMessage.replace(/^Firebase:\s*/i, '');
+  }
+
+  return 'An unexpected error occurred. Please try again.';
 }
